@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceType - Type to Destroy</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #1d4ed8;
+            --accent: #7c3aed;
+            --text: #f1f5f9;
+            --dark-bg: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.85);
+            --border-glow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--dark-bg);
+            color: var(--text);
+            font-family: 'Exo 2', sans-serif;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+        }
+        
+        #gameTitle {
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 20px rgba(139, 92, 246, 0.7);
+            background: linear-gradient(to right, #8b5cf6, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .menu-panel {
+            background-color: var(--panel-bg);
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+            box-shadow: var(--border-glow);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            border: 2px solid;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            text-transform: uppercase;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+        
+        .difficulty-btn {
+            width: 100%;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+        
+        .active-difficulty {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            background: #2a3b53;
+            border-radius: 5px;
+            outline: none;
+            margin: 1rem 0;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            background: var(--accent);
+            transform: scale(1.2);
+        }
+        
+        .game-stats {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-family: 'Orbitron', sans-serif;
+            z-index: 10;
+        }
+        
+        .stats-left, .stats-right {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .stats-right {
+            text-align: right;
+        }
+        
+        #gameArea {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+        }
+        
+        .ship {
+            position: absolute;
+            transition: transform 0.3s ease;
+        }
+        
+        .enemy-ship {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 5;
+        }
+        
+        .ship-model {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            position: relative;
+        }
+        
+        .ship-model svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .word-display {
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            margin-top: 5px;
+            position: relative;
+            text-align: center;
+        }
+        
+        .typed-correct {
+            color: #10b981;
+        }
+        
+        .typed-incorrect {
+            color: #ef4444;
+        }
+        
+        .laser {
+            position: absolute;
+            background: linear-gradient(to top, rgba(139, 92, 246, 0), rgba(139, 92, 246, 1));
+            width: 3px;
+            z-index: 4;
+        }
+        
+        .explosion {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(239, 68, 68, 1) 0%, rgba(239, 68, 68, 0) 70%);
+            border-radius: 50%;
+            opacity: 1;
+            z-index: 6;
+            animation: explode 0.5s forwards;
+        }
+        
+        @keyframes explode {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        #playerShip {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            z-index: 5;
+        }
+        
+        .player-ship-model {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        
+        #currentWord {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: white;
+            background-color: rgba(30, 41, 59, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 10;
+        }
+        
+        #gameOverPanel, #pausePanel, #howToPlayPanel, #customWordsPanel {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+        }
+        
+        #mainMenu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text);
+            z-index: 30;
+            padding: 10px 0;
+        }
+        
+        .footer span {
+            background: linear-gradient(to right, #8b5cf6, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        
+        #customWordsInput {
+            width: 100%;
+            height: 150px;
+            margin: 1rem 0;
+            padding: 0.75rem;
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Exo 2', sans-serif;
+        }
+
+        .health-bar-container {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 15px;
+            background-color: #2a3b53;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 9;
+        }
+        
+        .health-bar {
+            height: 100%;
+            background: linear-gradient(to right, #ef4444, #f97316);
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .shield {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0) 70%);
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            z-index: 6;
+            animation: pulse 2s infinite;
+            display: none;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: translateX(-50%) scale(1);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translateX(-50%) scale(1.1);
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+                opacity: 0.7;
+            }
+        }
+
+        .power-ups {
+            position: absolute;
+            bottom: 150px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .power-up {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--panel-bg);
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .power-up:hover {
+            transform: scale(1.1);
+            box-shadow: var(--border-glow);
+        }
+
+        .cooldown {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
+            transform: rotate(0deg);
+            transform-origin: center;
+            transition: clip-path 1s linear;
+        }
+
+        @media (max-width: 768px) {
+            .menu-panel {
+                width: 95%;
+                padding: 1.5rem;
+            }
+            
+            .game-stats {
+                padding: 0 10px;
+                font-size: 14px;
+            }
+            
+            #currentWord {
+                font-size: 20px;
+                padding: 8px 15px;
+            }
+            
+            .ship-model {
+                width: 50px;
+                height: 50px;
+            }
+            
+            #playerShip {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="stars"></div>
+        
+        <!-- Game Stats -->
+        <div class="game-stats" id="gameStats" style="display: none;">
+            <div class="stats-left">
+                <div>Score: <span id="score">0</span></div>
+                <div>Accuracy: <span id="accuracy">100</span>%</div>
+            </div>
+            <div class="stats-right">
+                <div>Level: <span id="level">1</span></div>
+                <div>WPM: <span id="wpm">0</span></div>
+            </div>
+        </div>
+        
+        <!-- Game Area -->
+        <div id="gameArea" style="display: none;">
+            <div id="playerShip">
+                <div class="player-ship-model">
+                    <svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M64 16L40 48H56L64 32L72 48H88L64 16Z" fill="#3b82f6"/>
+                        <path d="M56 48H72V80H56V48Z" fill="#6366f1"/>
+                        <path d="M40 80H56V96H40V80Z" fill="#7c3aed"/>
+                        <path d="M72 80H88V96H72V80Z" fill="#7c3aed"/>
+                        <path d="M56 80H72V88L64 96L56 88V80Z" fill="#8b5cf6"/>
+                        <path d="M48 96H56L52 112L48 96Z" fill="#ef4444"/>
+                        <path d="M72 96H80L76 112L72 96Z" fill="#ef4444"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="shield" id="shield"></div>
+            <div class="power-ups">
+                <div class="power-up" id="shieldPowerUp" title="Shield (S)">
+                    <i class="fas fa-shield-alt"></i>
+                    <div class="cooldown" style="display: none;"></div>
+                </div>
+                <div class="power-up" id="slowPowerUp" title="Slow Time (T)">
+                    <i class="fas fa-clock"></i>
+                    <div class="cooldown" style="display: none;"></div>
+                </div>
+                <div class="power-up" id="multishotPowerUp" title="Multishot (M)">
+                    <i class="fas fa-meteor"></i>
+                    <div class="cooldown" style="display: none;"></div>
+                </div>
+            </div>
+            <div id="currentWord"></div>
+            <div class="health-bar-container">
+                <div class="health-bar" id="healthBar"></div>
+            </div>
+        </div>
+        
+        <!-- Main Menu -->
+        <div id="mainMenu" class="menu-panel">
+            <h1 id="gameTitle" class="text-5xl font-bold mb-10 text-center">SPACE TYPER</h1>
+            
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-3 text-center">Difficulty</h2>
+                <div class="grid grid-cols-3 gap-2">
+                    <button class="btn btn-outline difficulty-btn active-difficulty" data-difficulty="easy">Easy</button>
+                    <button class="btn btn-outline difficulty-btn" data-difficulty="normal">Normal</button>
+                    <button class="btn btn-outline difficulty-btn" data-difficulty="hard">Hard</button>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="soundEffectsVolume" class="block mb-2">Sound Effects Volume</label>
+                <input type="range" id="soundEffectsVolume" class="slider" min="0" max="100" value="50">
+            </div>
+            
+            <div class="mb-8">
+                <label for="musicVolume" class="block mb-2">Music Volume</label>
+                <input type="range" id="musicVolume" class="slider" min="0" max="100" value="30">
+            </div>
+            
+            <div class="flex flex-col gap-4 mt-6">
+                <button id="customWordsBtn" class="btn btn-outline">Custom Words</button>
+                <button id="startGameBtn" class="btn btn-primary">Start Game</button>
+                <button id="howToPlayBtn" class="btn btn-outline">How To Play</button>
+            </div>
+        </div>
+        
+        <!-- Custom Words Panel -->
+        <div id="customWordsPanel" class="menu-panel">
+            <h2 class="text-2xl font-bold mb-4 text-center">Custom Words</h2>
+            <p class="mb-3">Enter your custom words, one per line:</p>
+            <textarea id="customWordsInput" placeholder="Enter words here, one per line..."></textarea>
+            <div class="flex flex-col gap-3">
+                <button id="saveCustomWordsBtn" class="btn btn-primary">Save Words</button>
+                <button id="cancelCustomWordsBtn" class="btn btn-outline">Cancel</button>
+            </div>
+        </div>
+        
+        <!-- How To Play Panel -->
+        <div id="howToPlayPanel" class="menu-panel">
+            <h2 class="text-2xl font-bold mb-4 text-center">How To Play</h2>
+            
+            <div class="mb-4">
+                <h3 class="text-xl font-semibold mb-2">Gameplay</h3>
+                <p>Enemy ships will appear from the top of the screen with words attached to them. Type the words correctly to destroy the ships before they reach your position.</p>
+            </div>
+            
+            <div class="mb-4">
+                <h3 class="text-xl font-semibold mb-2">Controls</h3>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>Type the words displayed on enemy ships</li>
+                    <li>Press <strong>ESC</strong> to pause the game</li>
+                    <li>Press <strong>S</strong> to activate Shield power-up</li>
+                    <li>Press <strong>T</strong> to activate Time Slow power-up</li>
+                    <li>Press <strong>M</strong> to activate Multi-shot power-up</li>
+                </ul>
+            </div>
+            
+            <div class="mb-4">
+                <h3 class="text-xl font-semibold mb-2">Power-ups</h3>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><strong>Shield (S)</strong>: Temporary protection from enemy ships</li>
+                    <li><strong>Time Slow (T)</strong>: Slows down all enemy ships</li>
+                    <li><strong>Multi-shot (M)</strong>: Destroy multiple ships with a single word</li>
+                </ul>
+            </div>
+            
+            <button id="closeHowToPlayBtn" class="btn btn-primary mt-4 w-full">Got it!</button>
+        </div>
+        
+        <!-- Pause Panel -->
+        <div id="pausePanel" class="menu-panel">
+            <h2 class="text-3xl font-bold mb-6 text-center">PAUSED</h2>
+            <div class="flex flex-col gap-4">
+                <button id="resumeBtn" class="btn btn-primary">Resume</button>
+                <button id="restartBtn" class="btn btn-outline">Restart</button>
+                <button id="quitBtn" class="btn btn-outline">Quit to Menu</button>
+            </div>
+        </div>
+        
+        <!-- Game Over Panel -->
+        <div id="gameOverPanel" class="menu-panel">
+            <h2 class="text-3xl font-bold mb-4 text-center">GAME OVER</h2>
+            <div class="mb-6">
+                <div class="flex justify-between mb-2">
+                    <span>Final Score:</span>
+                    <span id="finalScore">0</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span>Max Level:</span>
+                    <span id="finalLevel">1</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span>Accuracy:</span>
+                    <span id="finalAccuracy">0%</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span>Words Per Minute:</span>
+                    <span id="finalWpm">0</span>
+                </div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <button id="playAgainBtn" class="btn btn-primary">Play Again</button>
+                <button id="menuBtn" class="btn btn-outline">Back to Menu</button>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            made by <span>Abdul Dvlpr</span>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        const state = {
+            isPlaying: false,
+            isPaused: false,
+            difficulty: 'easy',
+            score: 0,
+            level: 1,
+            health: 100,
+            correctChars: 0,
+            incorrectChars: 0,
+            totalWords: 0,
+            startTime: 0,
+            enemies: [],
+            currentWord: '',
+            currentWordIndex: 0,
+            typedWord: '',
+            customWords: [],
+            wordLists: {
+                easy: ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'any', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'man', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too', 'use'],
+                normal: ['about', 'after', 'again', 'below', 'could', 'every', 'first', 'found', 'great', 'house', 'large', 'learn', 'never', 'other', 'place', 'plant', 'point', 'right', 'small', 'sound', 'spell', 'still', 'study', 'their', 'there', 'these', 'thing', 'think', 'three', 'water', 'where', 'which', 'world', 'would', 'write'],
+                hard: ['actually', 'although', 'american', 'anything', 'building', 'business', 'children', 'consider', 'continue', 'equation', 'exercise', 'favorite', 'features', 'feedback', 'feelings', 'graphics', 'hospital', 'identify', 'increase', 'industry', 'interest', 'keyboard', 'language', 'location', 'magazine', 'medicine', 'mountain', 'necessary', 'november', 'organize', 'personal', 'physical', 'position', 'possible', 'practice', 'probably', 'problems', 'question', 'research', 'resource', 'schedule', 'solution', 'someone', 'specific', 'standard', 'strength', 'strategy', 'successful', 'teaching', 'together', 'training', 'valuable', 'whatever', 'whenever', 'yourself']
+            },
+            powerUps: {
+                shield: { active: false, cooldown: false, duration: 8000, cooldownTime: 20000 },
+                slow: { active: false, cooldown: false, duration: 10000, cooldownTime: 25000 },
+                multishot: { active: false, cooldown: false, duration: 6000, cooldownTime: 30000 }
+            },
+            soundEffects: {
+                volume: 0.5,
+                laser: new Audio('https://www.soundjay.com/mechanical/sounds/laser-gun-19sf.mp3'),
+                explosion: new Audio('https://www.soundjay.com/explosion/explosion-01.mp3'),
+                powerUp: new Audio('https://www.soundjay.com/button/sounds/button-37.mp3'),
+                gameOver: new Audio('https://www.soundjay.com/misc/sounds/fail-buzzer-01.mp3')
+            },
+            music: {
+                volume: 0.3,
+                bgm: new Audio('https://www.soundjay.com/ambient/sounds/ambient-2.mp3')
+            }
+        };
+
+        // DOM elements
+        const ui = {
+            gameContainer: document.querySelector('.game-container'),
+            gameArea: document.getElementById('gameArea'),
+            mainMenu: document.getElementById('mainMenu'),
+            gameStats: document.getElementById('gameStats'),
+            customWordsPanel: document.getElementById('customWordsPanel'),
+            pausePanel: document.getElementById('pausePanel'),
+            gameOverPanel: document.getElementById('gameOverPanel'),
+            howToPlayPanel: document.getElementById('howToPlayPanel'),
+            playerShip: document.getElementById('playerShip'),
+            currentWordEl: document.getElementById('currentWord'),
+            difficultyBtns: document.querySelectorAll('.difficulty-btn'),
+            startGameBtn: document.getElementById('startGameBtn'),
+            customWordsBtn: document.getElementById('customWordsBtn'),
+            howToPlayBtn: document.getElementById('howToPlayBtn'),
+            saveCustomWordsBtn: document.getElementById('saveCustomWordsBtn'),
+            cancelCustomWordsBtn: document.getElementById('cancelCustomWordsBtn'),
+            customWordsInput: document.getElementById('customWordsInput'),
+            resumeBtn: document.getElementById('resumeBtn'),
+            restartBtn: document.getElementById('restartBtn'),
+            quitBtn: document.getElementById('quitBtn'),
+            playAgainBtn: document.getElementById('playAgainBtn'),
+            menuBtn: document.getElementById('menuBtn'),
+            closeHowToPlayBtn: document.getElementById('closeHowToPlayBtn'),
+            scoreEl: document.getElementById('score'),
+            levelEl: document.getElementById('level'),
+            accuracyEl: document.getElementById('accuracy'),
+            wpmEl: document.getElementById('wpm'),
+            finalScoreEl: document.getElementById('finalScore'),
+            finalLevelEl: document.getElementById('finalLevel'),
+            finalAccuracyEl: document.getElementById('finalAccuracy'),
+            finalWpmEl: document.getElementById('finalWpm'),
+            healthBar: document.getElementById('healthBar'),
+            soundEffectsVolume: document.getElementById('soundEffectsVolume'),
+            musicVolume: document.getElementById('musicVolume'),
+            shield: document.getElementById('shield'),
+            shieldPowerUp: document.getElementById('shieldPowerUp'),
+            slowPowerUp: document.getElementById('slowPowerUp'),
+            multishotPowerUp: document.getElementById('multishotPowerUp'),
+            stars: document.getElementById('stars')
+        };
+
+        // Initialize stars background
+        function createStars(count) {
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // Random size between 1px and 3px
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // Random position
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                // Random opacity
+                star.style.opacity = Math.random();
+                
+                fragment.appendChild(star);
+            }
+            ui.stars.appendChild(fragment);
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Difficulty selection
+            ui.difficultyBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    ui.difficultyBtns.forEach(b => b.classList.remove('active-difficulty'));
+                    btn.classList.add('active-difficulty');
+                    state.difficulty = btn.dataset.difficulty;
+                });
+            });
+            
+            // Volume controls
+            ui.soundEffectsVolume.addEventListener('input', (e) => {
+                state.soundEffects.volume = parseInt(e.target.value) / 100;
+                updateSoundVolumes();
+            });
+            
+            ui.musicVolume.addEventListener('input', (e) => {
+                state.music.volume = parseInt(e.target.value) / 100;
+                updateSoundVolumes();
+            });
+            
+            // Main menu buttons
+            ui.startGameBtn.addEventListener('click', startGame);
+            ui.customWordsBtn.addEventListener('click', () => {
+                ui.mainMenu.style.display = 'none';
+                ui.customWordsPanel.style.display = 'block';
+            });
+            ui.howToPlayBtn.addEventListener('click', () => {
+                ui.mainMenu.style.display = 'none';
+                ui.howToPlayPanel.style.display = 'block';
+            });
+            
+            // Custom words panel
+            ui.saveCustomWordsBtn.addEventListener('click', () => {
+                const text = ui.customWordsInput.value.trim();
+                if (text) {
+                    state.customWords = text.split(/\n+/).filter(word => word.trim().length > 0);
+                }
+                ui.customWordsPanel.style.display = 'none';
+                ui.mainMenu.style.display = 'block';
+            });
+            ui.cancelCustomWordsBtn.addEventListener('click', () => {
+                ui.customWordsPanel.style.display = 'none';
+                ui.mainMenu.style.display = 'block';
+            });
+            
+            // How to play panel
+            ui.closeHowToPlayBtn.addEventListener('click', () => {
+                ui.howToPlayPanel.style.display = 'none';
+                ui.mainMenu.style.display = 'block';
+            });
+            
+            // Pause panel
+            ui.resumeBtn.addEventListener('click', resumeGame);
+            ui.restartBtn.addEventListener('click', restartGame);
+            ui.quitBtn.addEventListener('click', quitToMenu);
+            
+            // Game over panel
+            ui.playAgainBtn.addEventListener('click', restartGame);
+            ui.menuBtn.addEventListener('click', quitToMenu);
+            
+            // Power-ups
+            ui.shieldPowerUp.addEventListener('click', () => activatePowerUp('shield'));
+            ui.slowPowerUp.addEventListener('click', () => activatePowerUp('slow'));
+            ui.multishotPowerUp.addEventListener('click', () => activatePowerUp('multishot'));
+            
+            // Keyboard controls
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keypress', handleKeyPress);
+            
+            // Window blur/focus events
+            window.addEventListener('blur', () => {
+                if (state.isPlaying && !state.isPaused) {
+                    pauseGame();
+                }
+            });
+        }
+        
+        // Sound management
+        function updateSoundVolumes() {
+            for (let effect in state.soundEffects) {
+                if (state.soundEffects[effect] instanceof Audio) {
+                    state.soundEffects[effect].volume = state.soundEffects.volume;
+                }
+            }
+            
+            state.music.bgm.volume = state.music.volume;
+            state.music.bgm.loop = true;
+        }
+        
+        function playSound(sound) {
+            const audio = state.soundEffects[sound];
+            if (audio && typeof audio.play === 'function') {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Audio play prevented:", e));
+            }
+        }
+
+        // Game state management
+        function startGame() {
+            resetGameState();
+            
+            ui.mainMenu.style.display = 'none';
+            ui.gameArea.style.display = 'block';
+            ui.gameStats.style.display = 'flex';
+            
+            state.isPlaying = true;
+            state.startTime = Date.now();
+            
+            // Start background music
+            state.music.bgm.play().catch(e => console.log("Music play prevented:", e));
+            
+            // Start game loop
+            requestAnimationFrame(gameLoop);
+            
+            // Set spawn interval based on difficulty
+            const spawnIntervals = { easy: 3000, normal: 2500, hard: 2000 };
+            state.spawnInterval = setInterval(() => {
+                if (!state.isPaused) {
+                    spawnEnemy();
+                }
+            }, spawnIntervals[state.difficulty]);
+        }
+        
+        function pauseGame() {
+            if (!state.isPlaying || state.isPaused) return;
+            
+            state.isPaused = true;
+            ui.pausePanel.style.display = 'block';
+            
+            // Pause music
+            state.music.bgm.pause();
+        }
+        
+        function resumeGame() {
+            if (!state.isPlaying || !state.isPaused) return;
+            
+            state.isPaused = false;
+            ui.pausePanel.style.display = 'none';
+            
+            // Resume music
+            state.music.bgm.play().catch(e => console.log("Music play prevented:", e));
+        }
+        
+        function restartGame() {
+            if (state.spawnInterval) {
+                clearInterval(state.spawnInterval);
+            }
+            
+            // Clear game area of enemies
+            state.enemies.forEach(enemy => {
+                if (enemy.element && enemy.element.parentNode) {
+                    enemy.element.remove();
+                }
+            });
+            
+            ui.pausePanel.style.display = 'none';
+            ui.gameOverPanel.style.display = 'none';
+            
+            startGame();
+        }
+        
+        function quitToMenu() {
+            if (state.spawnInterval) {
+                clearInterval(state.spawnInterval);
+            }
+            
+            // Clear game area of enemies
+            state.enemies.forEach(enemy => {
+                if (enemy.element && enemy.element.parentNode) {
+                    enemy.element.remove();
+                }
+            });
+            
+            state.isPlaying = false;
+            state.isPaused = false;
+            
+            ui.pausePanel.style.display = 'none';
+            ui.gameOverPanel.style.display = 'none';
+            ui.gameArea.style.display = 'none';
+            ui.gameStats.style.display = 'none';
+            ui.mainMenu.style.display = 'block';
+            
+            // Stop music
+            state.music.bgm.pause();
+            state.music.bgm.currentTime = 0;
+        }
+        
+        function gameOver() {
+            state.isPlaying = false;
+            
+            if (state.spawnInterval) {
+                clearInterval(state.spawnInterval);
+            }
+            
+            // Play game over sound
+            playSound('gameOver');
+            
+            // Stop music
+            state.music.bgm.pause();
+            
+            // Update final stats
+            ui.finalScoreEl.textContent = state.score;
+            ui.finalLevelEl.textContent = state.level;
+            ui.finalAccuracyEl.textContent = `${calculateAccuracy()}%`;
+            ui.finalWpmEl.textContent = calculateWPM();
+            
+            ui.gameOverPanel.style.display = 'block';
+        }
+        
+        function resetGameState() {
+            state.isPlaying = false;
+            state.isPaused = false;
+            state.score = 0;
+            state.level = 1;
+            state.health = 100;
+            state.correctChars = 0;
+            state.incorrectChars = 0;
+            state.totalWords = 0;
+            state.enemies = [];
+            state.currentWord = '';
+            state.currentWordIndex = 0;
+            state.typedWord = '';
+            
+            // Reset power-ups
+            for (let powerUp in state.powerUps) {
+                state.powerUps[powerUp].active = false;
+                state.powerUps[powerUp].cooldown = false;
+            }
+            
+            // Reset UI elements
+            ui.scoreEl.textContent = '0';
+            ui.levelEl.textContent = '1';
+            ui.accuracyEl.textContent = '100';
+            ui.wpmEl.textContent = '0';
+            ui.healthBar.style.width = '100%';
+            ui.currentWordEl.textContent = '';
+            ui.shield.style.display = 'none';
+            
+            // Clear any cooldown visuals
+            document.querySelectorAll('.cooldown').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Clear all enemies
+            const enemies = document.querySelectorAll('.enemy-ship');
+            enemies.forEach(enemy => enemy.remove());
+        }
+        
+        // Game mechanics
+        function spawnEnemy() {
+            if (!state.isPlaying || state.enemies.length >= 10) return;
+            
+            // Get a random word based on difficulty
+            let wordPool;
+            if (state.customWords.length > 0) {
+                wordPool = state.customWords;
+            } else {
+                wordPool = state.wordLists[state.difficulty];
+            }
+            
+            const word = wordPool[Math.floor(Math.random() * wordPool.length)];
+            
+            // Create enemy ship element
+            const enemyShip = document.createElement('div');
+            enemyShip.classList.add('enemy-ship');
+            
+            // Create ship model
+            const shipModel = document.createElement('div');
+            shipModel.classList.add('ship-model');
+            
+            // Different ship designs
+            const shipTypes = [
+                `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="50,10 30,50 70,50" fill="#f43f5e"/>
+                    <rect x="40" y="50" width="20" height="30" fill="#ec4899"/>
+                    <polygon points="30,80 40,80 45,90 35,90" fill="#be185d"/>
+                    <polygon points="70,80 60,80 55,90 65,90" fill="#be185d"/>
+                </svg>`,
+                `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="30" r="20" fill="#14b8a6"/>
+                    <rect x="30" y="30" width="40" height="40" fill="#0d9488"/>
+                    <polygon points="30,70 40,70 45,90 35,90" fill="#059669"/>
+                    <polygon points="70,70 60,70 55,90 65,90" fill="#059669"/>
+                </svg>`,
+                `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="30,20 70,20 80,50 20,50" fill="#8b5cf6"/>
+                    <rect x="35" y="50" width="30" height="25" fill="#7c3aed"/>
+                    <polygon points="35,75 40,85 60,85 65,75" fill="#6d28d9"/>
+                </svg>`
+            ];
+            
+            shipModel.innerHTML = shipTypes[Math.floor(Math.random() * shipTypes.length)];
+            
+            // Create word display
+            const wordDisplay = document.createElement('div');
+            wordDisplay.classList.add('word-display');
+            wordDisplay.textContent = word;
+            
+            // Append elements
+            enemyShip.appendChild(shipModel);
+            enemyShip.appendChild(wordDisplay);
+            
+            // Set initial position
+            const screenWidth = ui.gameArea.clientWidth;
+            const shipWidth = 60;
+            const xPos = Math.random() * (screenWidth - shipWidth);
+            
+            enemyShip.style.left = `${xPos}px`;
+            enemyShip.style.top = '-60px';
+            
+            // Add to game area
+            ui.gameArea.appendChild(enemyShip);
+            
+            // Calculate speed based on level and difficulty
+            let speedMultiplier;
+            switch (state.difficulty) {
+                case 'easy': speedMultiplier = 0.6; break;
+                case 'normal': speedMultiplier = 1; break;
+                case 'hard': speedMultiplier = 1.4; break;
+                default: speedMultiplier = 1;
+            }
+            
+            // Apply level-based speed increase
+            speedMultiplier += (state.level - 1) * 0.1;
+            
+            // Apply slow power-up effect
+            if (state.powerUps.slow.active) {
+                speedMultiplier *= 0.5;
+            }
+            
+            // Add to enemies array
+            state.enemies.push({
+                element: enemyShip,
+                word: word,
+                position: { x: xPos, y: -60 },
+                speed: 50 * speedMultiplier,
+                isTargeted: false
+            });
+            
+            // If no word is currently targeted, select this one
+            if (!state.currentWord) {
+                selectClosestEnemy();
+            }
+        }
+
+        function selectClosestEnemy() {
+            if (!state.isPlaying || state.enemies.length === 0) return;
+            
+            // Find the enemy closest to the bottom of the screen
+            let closestEnemy = null;
+            let maxY = -Infinity;
+            
+            state.enemies.forEach(enemy => {
+                enemy.isTargeted = false;
+                if (enemy.position.y > maxY) {
+                    closestEnemy = enemy;
+                    maxY = enemy.position.y;
+                }
+            });
+            
+            if (closestEnemy) {
+                closestEnemy.isTargeted = true;
+                state.currentWord = closestEnemy.word;
+                state.currentWordIndex = 0;
+                state.typedWord = '';
+                updateCurrentWordDisplay();
+            } else {
+                state.currentWord = '';
+                ui.currentWordEl.textContent = '';
+            }
+        }
+        
+        function updateCurrentWordDisplay() {
+            if (!state.currentWord) {
+                ui.currentWordEl.textContent = '';
+                return;
+            }
+            
+            let displayHTML = '';
+            
+            for (let i = 0; i < state.currentWord.length; i++) {
+                if (i < state.currentWordIndex) {
+                    // Already typed correctly
+                    displayHTML += `<span class="typed-correct">${state.currentWord[i]}</span>`;
+                } else if (i === state.currentWordIndex) {
+                    // Current character to type
+                    displayHTML += `<span class="text-white font-bold underline">${state.currentWord[i]}</span>`;
+                } else {
+                    // Not typed yet
+                    displayHTML += state.currentWord[i];
+                }
+            }
+            
+            ui.currentWordEl.innerHTML = displayHTML;
+        }
+        
+        function shootEnemy(enemy) {
+            if (!enemy || !state.isPlaying) return;
+            
+            // Create laser effect
+            const playerRect = ui.playerShip.getBoundingClientRect();
+            const enemyRect = enemy.element.getBoundingClientRect();
+            
+            const startX = playerRect.left + playerRect.width / 2;
+            const startY = playerRect.top;
+            const endX = enemyRect.left + enemyRect.width / 2;
+            const endY = enemyRect.bottom;
+            
+            const angle = Math.atan2(endX - startX, startY - endY);
+            const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+            
+            const laser = document.createElement('div');
+            laser.classList.add('laser');
+            laser.style.height = `${length}px`;
+            laser.style.left = `${startX}px`;
+            laser.style.top = `${startY - length}px`;
+            laser.style.transform = `rotate(${angle}rad)`;
+            
+            ui.gameArea.appendChild(laser);
+            
+            // Play laser sound
+            playSound('laser');
+            
+            // Remove laser after animation
+            setTimeout(() => {
+                if (laser.parentNode) {
+                    laser.remove();
+                }
+            }, 200);
+        }
+        
+        function destroyEnemy(enemy, byMultishot = false) {
+            if (!enemy || !state.isPlaying) return;
+            
+            // Create explosion effect
+            const rect = enemy.element.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            
+            const explosion = document.createElement('div');
+            explosion.classList.add('explosion');
+            explosion.style.left = `${x - 30}px`;
+            explosion.style.top = `${y - 30}px`;
+            
+            ui.gameArea.appendChild(explosion);
+            
+            // Play explosion sound if not multishot (to avoid sound spam)
+            if (!byMultishot) {
+                playSound('explosion');
+            }
+            
+            // Remove explosion after animation
+            setTimeout(() => {
+                if (explosion.parentNode) {
+                    explosion.remove();
+                }
+            }, 500);
+            
+            // Remove enemy from DOM
+            enemy.element.remove();
+            
+            // Remove enemy from array
+            const index = state.enemies.indexOf(enemy);
+            if (index !== -1) {
+                state.enemies.splice(index, 1);
+            }
+            
+            // Increment score
+            const scoreIncrease = state.difficulty === 'easy' ? 10 : 
+                                  state.difficulty === 'normal' ? 15 : 20;
+            state.score += scoreIncrease;
+            ui.scoreEl.textContent = state.score;
+            
+            // Check for level up every 150 points
+            if (state.score >= state.level * 150) {
+                levelUp();
+            }
+            
+            state.totalWords++;
+            
+            // Reset current word if this was the targeted enemy
+            if (enemy.isTargeted) {
+                state.currentWord = '';
+                state.currentWordIndex = 0;
+                state.typedWord = '';
+                selectClosestEnemy();
+            }
+        }
+        
+        function levelUp() {
+            state.level++;
+            ui.levelEl.textContent = state.level;
+            
+            // Heal player slightly on level up
+            state.health = Math.min(100, state.health + 20);
+            ui.healthBar.style.width = `${state.health}%`;
+        }
+        
+        function handleKeyDown(e) {
+            if (!state.isPlaying) return;
+            
+            // ESC key to pause/unpause
+            if (e.key === 'Escape') {
+                if (state.isPaused) {
+                    resumeGame();
+                } else {
+                    pauseGame();
+                }
+                return;
+            }
+            
+            // Power-up activation keys
+            if (!state.isPaused) {
+                if (e.key.toLowerCase() === 's') {
+                    activatePowerUp('shield');
+                } else if (e.key.toLowerCase() === 't') {
+                    activatePowerUp('slow');
+                } else if (e.key.toLowerCase() === 'm') {
+                    activatePowerUp('multishot');
+                }
+            }
+        }
+        
+        function handleKeyPress(e) {
+            if (!state.isPlaying || state.isPaused || !state.currentWord) return;
+            
+            const char = e.key.toLowerCase();
+            
+            // Only accept letters
+            if (!/^[a-z]$/.test(char)) return;
+            
+            // Check if correct character
+            if (char === state.currentWord[state.currentWordIndex]) {
+                state.correctChars++;
+                state.currentWordIndex++;
+                
+                // Find targeted enemy
+                const targetedEnemy = state.enemies.find(enemy => enemy.isTargeted);
+                
+                if (targetedEnemy) {
+                    shootEnemy(targetedEnemy);
+                    
+                    // If word completed
+                    if (state.currentWordIndex >= state.currentWord.length) {
+                        destroyEnemy(targetedEnemy);
+                    }
+                }
+            } else {
+                state.incorrectChars++;
+            }
+            
+            // Update display
+            updateCurrentWordDisplay();
+            updateStats();
+        }
+        
+        function activatePowerUp(type) {
+            const powerUp = state.powerUps[type];
+            
+            if (powerUp.active || powerUp.cooldown || !state.isPlaying || state.isPaused) return;
+            
+            powerUp.active = true;
+            playSound('powerUp');
+            
+            const powerUpEl = document.getElementById(`${type}PowerUp`);
+            const cooldownEl = powerUpEl.querySelector('.cooldown');
+            
+            // Visual effect for powerup activation
+            powerUpEl.classList.add('animate-pulse');
+            
+            // Specific power-up effects
+            switch(type) {
+                case 'shield':
+                    ui.shield.style.display = 'block';
+                    break;
+                case 'multishot':
+                    // Destroy multiple enemies
+                    if (state.enemies.length > 0) {
+                        const count = Math.min(3, state.enemies.length);
+                        for (let i = 0; i < count; i++) {
+                            destroyEnemy(state.enemies[0], true);
+                        }
+                    }
+                    break;
+            }
+            
+            // Set duration timer
+            setTimeout(() => {
+                powerUp.active = false;
+                powerUpEl.classList.remove('animate-pulse');
+                
+                // Deactivate specific effects
+                if (type === 'shield') {
+                    ui.shield.style.display = 'none';
+                }
+                
+                // Start cooldown
+                powerUp.cooldown = true;
+                cooldownEl.style.display = 'block';
+                
+                // Reset the cooldown animation
+                cooldownEl.style.clipPath = 'polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%)';
+                
+                // Animate the cooldown
+                let startTime = Date.now();
+                let cooldownInterval = setInterval(() => {
+                    let elapsed = Date.now() - startTime;
+                    let progress = elapsed / powerUp.cooldownTime;
+                    
+                    if (progress >= 1) {
+                        clearInterval(cooldownInterval);
+                        powerUp.cooldown = false;
+                        cooldownEl.style.display = 'none';
+                    } else {
+                        let angle = 360 * progress;
+                        cooldownEl.style.clipPath = `polygon(50% 50%, 50% 0%, ${50 + 50 * Math.sin(angle * Math.PI / 180)}% ${50 - 50 * Math.cos(angle * Math.PI / 180)}%, 100% 100%, 0% 100%, 0% 0%, 50% 0%)`;
+                    }
+                }, 50);
+                
+            }, powerUp.duration);
+        }
+        
+        function calculateAccuracy() {
+            const total = state.correctChars + state.incorrectChars;
+            if (total === 0) return 100;
+            
+            return Math.round((state.correctChars / total) * 100);
+        }
+        
+        function calculateWPM() {
+            if (state.totalWords === 0) return 0;
+            
+            const minutesElapsed = (Date.now() - state.startTime) / 60000;
+            if (minutesElapsed === 0) return 0;
+            
+            return Math.round(state.totalWords / minutesElapsed);
+        }
+        
+        function updateStats() {
+            ui.accuracyEl.textContent = calculateAccuracy();
+            ui.wpmEl.textContent = calculateWPM();
+        }
+        
+        // Game loop
+        function gameLoop() {
+            if (!state.isPlaying) return;
+            
+            if (!state.isPaused) {
+                // Update enemy positions
+                state.enemies.forEach(enemy => {
+                    // Move enemy down
+                    enemy.position.y += enemy.speed * 0.016; // Based on ~60fps
+                    enemy.element.style.top = `${enemy.position.y}px`;
+                    
+                    // Check if enemy reached bottom
+                    if (enemy.position.y > window.innerHeight - 150) {
+                        // Deal damage to player, unless shield is active
+                        if (!state.powerUps.shield.active) {
+                            state.health -= 20;
+                            ui.healthBar.style.width = `${state.health}%`;
+                            
+                            // Game over if health depleted
+                            if (state.health <= 0) {
+                                gameOver();
+                                return;
+                            }
+                        }
+                        
+                        // Remove enemy
+                        enemy.element.remove();
+                        const index = state.enemies.indexOf(enemy);
+                        if (index !== -1) {
+                            state.enemies.splice(index, 1);
+                        }
+                        
+                        // If this was the targeted enemy, select a new one
+                        if (enemy.isTargeted) {
+                            state.currentWord = '';
+                            state.currentWordIndex = 0;
+                            state.typedWord = '';
+                            selectClosestEnemy();
+                        }
+                    }
+                });
+                
+                // If no enemy is targeted but there are enemies, select one
+                if (!state.currentWord && state.enemies.length > 0) {
+                    selectClosestEnemy();
+                }
+                
+                // Update stats
+                updateStats();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize the game
+        window.addEventListener('load', () => {
+            createStars(200);
+            setupEventListeners();
+            updateSoundVolumes();
+        });
+    </script>
+</body>
+</html>
